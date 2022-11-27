@@ -1,17 +1,4 @@
-const loadFile = (fileName) => {
-  return new Promise((resolve, reject) => {
-    fetch(`${window.location.origin}/${fileName}`)
-      .then((data) => resolve(data.json()))
-      .catch((err) => reject(err));
-  });
-};
-
-
-
 function getMonthName(month) {
-  // const d = new Date();
-  // d.setMonth(month-1);
-  // const monthName = d.toLocaleString("default", {month: "long"});
   const months = [
     "January",
     "February",
@@ -42,674 +29,681 @@ function getWeekName(week) {
   return weekdays[week];
 }
 
-const main = async () => {
-  const jsonSpeedViolations_1 = await loadFile("data/violations1.json");
-  const jsonSpeedViolations_2 = await loadFile("data/violations2.json");
+d3.json("data/violations1.json").then(function(data_1){ 
+  d3.json("data/violations2.json").then(function(data_2){ 
+      const main = async () => {
 
-  jsonSpeedViolationsData = jsonSpeedViolations_1.concat(jsonSpeedViolations_2);
 
-  speedViolationData = jsonSpeedViolationsData
-    .map((d) => ({
-      address: d["ADDRESS"],
-      camera_id: d["CAMERA_ID"],
-      violation_date: d["VIOLATION_DATE"],
-      violations: d["VIOLATIONS"],
-      weekday: d["WEEKDAY"],
-      year: d["YEAR"],
-      day: d["DAY"],
-      month: d["MONTH"],
-      x_coordinate: d["X_COORDINATE"],
-      y_coordinate: d["Y_COORDINATE"],
-      latitude: d["LATITUDE"],
-      longitude: d["LONGITUDE"],
-    }))
-    .filter(
-      (d) =>
-        d.address !== null &&
-        d.camera_id !== null &&
-        d.violation_date !== null &&
-        d.violations !== null &&
-        d.weekday !== null &&
-        d.year !== null &&
-        d.day !== null &&
-        d.month !== null &&
-        d.x_coordinate !== null &&
-        d.y_coordinate !== null
-    );
+        const jsonSpeedViolations_1 = data_1,
+          jsonSpeedViolations_2 = data_2;
 
-  const addressWiseSummary = {};
-  const addressResultSet = [];
 
-  const streetWiseSummary = {};
-  const streetResultSet = [];
+        jsonSpeedViolationsData = jsonSpeedViolations_1.concat(jsonSpeedViolations_2);
 
-  const yearWiseSummary = {};
-  const yearResultSet = [];
-
-  const monthWiseSummary = {};
-  const monthResultSet = [];
-
-  const weekdayWiseSummary = {};
-  const weekdayResultSet = [];
-
-  const groupAddressWeekWiseSummary = {};
-  const groupAddressWeekResultSet = [];
-
-  for (let record of speedViolationData) {
-    const year = record.year;
-    const month = record.month;
-    const weekday = record.weekday;
-    const address = record.address;
-    const splitAddr = address.split(" ");
-    const len = splitAddr.length;
-    var street = "";
-
-    // const weekday_month_year = weekday.toString().concat(" ").concat(month).concat(" ").concat(year);
-    const address_weekday = address.concat(" ").concat(weekday);
-
-    if (len === 3) {
-      street = splitAddr[2];
-    } else if (len >= 5) {
-      street = splitAddr[2]
-        .concat(" ")
-        .concat(splitAddr[3])
-        .concat(" ")
-        .concat(splitAddr[4]);
-    } else {
-      street = splitAddr[2].concat(" ").concat(splitAddr[3]);
-    }
-
-    if (!(year in yearWiseSummary)) {
-      yearWiseSummary[year] = { violations: 0 };
-    }
-
-    yearWiseSummary[year]["violations"] += record.violations;
-
-    if (!(month in monthWiseSummary)) {
-      monthWiseSummary[month] = { violations: 0 };
-    }
-
-    monthWiseSummary[month]["violations"] += record.violations;
-
-    if (!(weekday in weekdayWiseSummary)) {
-      weekdayWiseSummary[weekday] = { violations: 0 };
-    }
-
-    weekdayWiseSummary[weekday]["violations"] += record.violations;
-
-    if (!(address in addressWiseSummary)) {
-      addressWiseSummary[address] = {
-        violations: 0,
-        x_coordinate: record.x_coordinate,
-        y_coordinate: record.y_coordinate,
-      };
-    }
-
-    addressWiseSummary[address]["violations"] += record.violations;
-
-    if (!(street in streetWiseSummary)) {
-      streetWiseSummary[street] = {
-        violations: 0,
-        x_coordinate: record.x_coordinate,
-        y_coordinate: record.y_coordinate,
-        latitude: record.latitude,
-        longitude: record.longitude,
-      };
-    }
-
-    streetWiseSummary[street]["violations"] += record.violations;
-
-    if (!(address_weekday in groupAddressWeekWiseSummary)) {
-      groupAddressWeekWiseSummary[address_weekday] = {
-        violations: 0,
-        address: address,
-        weekday: getWeekName(weekday),
-        x_coordinate: record.x_coordinate,
-        y_coordinate: record.y_coordinate,
-        latitude: record.latitude,
-        longitude: record.longitude,
-      };
-    }
-
-    groupAddressWeekWiseSummary[address_weekday]["violations"] +=
-      record.violations;
-  }
-
-  for (let year in yearWiseSummary) {
-    const tempObj = {
-      year: year,
-      violations: yearWiseSummary[year]["violations"],
-    };
-
-    yearResultSet.push(tempObj);
-  }
-
-  for (let month in monthWiseSummary) {
-    const tempObj = {
-      month: getMonthName(month),
-      violations: monthWiseSummary[month]["violations"],
-    };
-
-    monthResultSet.push(tempObj);
-  }
-
-  for (let weekday in weekdayWiseSummary) {
-    const tempObj = {
-      weekday: getWeekName(weekday),
-      violations: weekdayWiseSummary[weekday]["violations"],
-    };
-
-    weekdayResultSet.push(tempObj);
-  }
-
-  for (let address in addressWiseSummary) {
-    const tempObj = {
-      address: address,
-      violations: addressWiseSummary[address]["violations"],
-      x_coordinate: addressWiseSummary[address]["x_coordinate"],
-      y_coordinate: addressWiseSummary[address]["y_coordinate"],
-    };
-
-    addressResultSet.push(tempObj);
-  }
-
-  for (let street in streetWiseSummary) {
-    const tempObj = {
-      street: street,
-      violations: streetWiseSummary[street]["violations"],
-      x_coordinate: streetWiseSummary[street]["x_coordinate"] / 10000,
-      y_coordinate: streetWiseSummary[street]["y_coordinate"] / 10000,
-      latitude: streetWiseSummary[street]["latitude"],
-      longitude: streetWiseSummary[street]["longitude"],
-    };
-
-    streetResultSet.push(tempObj);
-  }
-
-  for (let address_weekday in groupAddressWeekWiseSummary) {
-    // const split = address_weekday.split(" ");
-    const tempObj = {
-      address: groupAddressWeekWiseSummary[address_weekday]["address"],
-      weekday: groupAddressWeekWiseSummary[address_weekday]["weekday"],
-      violations: groupAddressWeekWiseSummary[address_weekday]["violations"],
-      x_coordinate:
-        groupAddressWeekWiseSummary[address_weekday]["x_coordinate"] / 10000,
-      y_coordinate:
-        groupAddressWeekWiseSummary[address_weekday]["y_coordinate"] / 10000,
-      latitude: groupAddressWeekWiseSummary[address_weekday]["latitude"],
-      longitude: groupAddressWeekWiseSummary[address_weekday]["longitude"],
-    };
-    groupAddressWeekResultSet.push(tempObj);
-  }
-
-  var prevYear = 0;
-  var currYear = 0;
-  var prevYear_violations = 0;
-  const changeResultSet = [];
-
-  for (let record of yearResultSet) {
-    if (prevYear !== 0) {
-      currYear = record.year;
-      const currObj = {
-        prevYear: prevYear,
-        currYear: currYear,
-        prevYear_violations: prevYear_violations,
-        currYear_violations: record.violations,
-      };
-      changeResultSet.push(currObj);
-      prevYear = currYear;
-      prevYear_violations = record.violations;
-    } else {
-      prevYear = record.year;
-      prevYear_violations = record.violations;
-    }
-  }
-
-  const summaryData = {
-    yearWiseData: yearResultSet,
-    monthWiseData: monthResultSet,
-    weekdayWiseData: weekdayResultSet,
-    addressWiseData: addressResultSet,
-    streetWiseData: streetResultSet,
-    changeYearWiseData: changeResultSet,
-    groupAddressWeekWiseData: groupAddressWeekResultSet.sort(
-      (a, b) => parseFloat(a.year) - parseFloat(b.year)
-    ),
-  };
-
-  ym_bar_margin = { top: 50, right: 0, bottom: 30, left: 80 };
-
-  ym_bar_height = 600;
-  width = window.innerWidth;
-
-  ym_bar_xScale = d3
-    .scaleBand()
-    .domain(summaryData.monthWiseData.map((d) => d.month))
-    .range([ym_bar_margin.left, width - ym_bar_margin.right])
-    .padding(0.1);
-
-  ym_bar_yScale = d3
-    .scaleLinear()
-    .domain([0, d3.max(summaryData.monthWiseData, (d) => d.violations)])
-    .nice()
-    .range([ym_bar_height - ym_bar_margin.bottom, ym_bar_margin.top]);
-
-  const svg = d3.create("svg").attr("viewBox", [0, 0, width, ym_bar_height]);
-
-  const makeYLines = () => d3.axisLeft().scale(ym_bar_yScale);
-
-  svg
-    .append("g")
-    .attr("transform", `translate(0 , ${ym_bar_height - ym_bar_margin.bottom})`)
-    .call(d3.axisBottom(ym_bar_xScale).tickSizeOuter(4));
-
-  svg
-    .append("g")
-    .attr("transform", `translate(${ym_bar_margin.left}, 0)`)
-    .call(d3.axisLeft(ym_bar_yScale));
-
-  svg
-    .append("g")
-    .attr("class", "grid")
-    .attr("transform", `translate(${ym_bar_margin.left}, 0)`)
-    .call(
-      makeYLines()
-        .tickSize(-width - ym_bar_margin.right - ym_bar_margin.left, 0, 0)
-        .tickFormat("")
-    );
-
-  const barGroups = svg
-    .selectAll()
-    .data(summaryData.monthWiseData)
-    .enter()
-    .append("g");
-
-  barGroups
-    .append("rect")
-    .attr("class", "bar")
-    .attr("x", (d) => ym_bar_xScale(d.month) + 20)
-    .attr("y", (d) => ym_bar_yScale(d.violations))
-    .attr("fill", "LightSeaGreen")
-    .attr(
-      "height",
-      (d) => ym_bar_height - ym_bar_margin.bottom - ym_bar_yScale(d.violations)
-    )
-    .attr("width", ym_bar_xScale.bandwidth() - 40)
-    .on("mouseenter", function (actual, i) {
-      d3.selectAll(".value").attr("opacity", 0);
-
-      d3.select(this)
-        .transition()
-        .duration(300)
-        .attr("opacity", 0.6)
-        .attr("x", (d) => ym_bar_xScale(d.month) + 10)
-        .attr("width", ym_bar_xScale.bandwidth() - 20);
-
-      const y = ym_bar_yScale(i.violations);
-
-      const line = svg
-        .append("line")
-        .attr("id", "limit")
-        .attr("stroke", "HotPink")
-        .style("stroke-dasharray", "5 5")
-        .style("stroke-width", "2px")
-        .attr("x1", ym_bar_margin.left)
-        .attr("y1", y)
-        .attr("x2", (width - ym_bar_margin.right) * 2)
-        .attr("y2", y);
-
-      barGroups
-        .append("text")
-        .attr("class", "divergence")
-        .attr(
-          "x",
-          (d) => ym_bar_xScale(d.month) + ym_bar_xScale.bandwidth() / 2
-        )
-        .attr("y", (d) => ym_bar_yScale(d.violations) - 5)
-        .style("font-size", "15px")
-        .attr("fill", "HotPink")
-        .style("font-weight", "bold")
-        .attr("text-anchor", "middle")
-        .text((a, idx) => {
-          const diff_violations = a.violations - i.violations;
-          const divergence = ((diff_violations / i.violations) * 100).toFixed(
-            2
+        speedViolationData = jsonSpeedViolationsData
+          .map((d) => ({
+            address: d["ADDRESS"],
+            camera_id: d["CAMERA_ID"],
+            violation_date: d["VIOLATION_DATE"],
+            violations: d["VIOLATIONS"],
+            weekday: d["WEEKDAY"],
+            year: d["YEAR"],
+            day: d["DAY"],
+            month: d["MONTH"],
+            x_coordinate: d["X_COORDINATE"],
+            y_coordinate: d["Y_COORDINATE"],
+            latitude: d["LATITUDE"],
+            longitude: d["LONGITUDE"],
+          }))
+          .filter(
+            (d) =>
+              d.address !== null &&
+              d.camera_id !== null &&
+              d.violation_date !== null &&
+              d.violations !== null &&
+              d.weekday !== null &&
+              d.year !== null &&
+              d.day !== null &&
+              d.month !== null &&
+              d.x_coordinate !== null &&
+              d.y_coordinate !== null
           );
 
-          let text = "";
-          if (divergence > 0) text += "+";
-          text += `${divergence}%`;
+        const addressWiseSummary = {};
+        const addressResultSet = [];
 
-          // i - object - current selection - violations and month
-          // a - not cureent bars - violations and month
-          // idx -  index
-          // actual - object, MouseEvent
+        const streetWiseSummary = {};
+        const streetResultSet = [];
 
-          return i.month !== a.month ? text : "";
-        });
-    })
-    .on("mouseleave", function () {
-      d3.selectAll(".value").attr("opacity", 1);
+        const yearWiseSummary = {};
+        const yearResultSet = [];
 
-      d3.select(this)
-        .transition()
-        .duration(300)
-        .attr("opacity", 1)
-        .attr("x", (d) => ym_bar_xScale(d.month) + 20)
-        .attr("width", ym_bar_xScale.bandwidth() - 40);
+        const monthWiseSummary = {};
+        const monthResultSet = [];
 
-      svg.selectAll("#limit").remove();
-      svg.selectAll(".divergence").remove();
-    });
+        const weekdayWiseSummary = {};
+        const weekdayResultSet = [];
 
-  barGroups
-    .append("text")
-    .attr("class", "value")
-    .attr("x", (d) => ym_bar_xScale(d.month) + ym_bar_xScale.bandwidth() / 2)
-    .attr("y", (d) => ym_bar_yScale(d.violations) - 5)
-    .style("font-size", "15px")
-    .style("font-weight", "bold")
-    .attr("text-anchor", "middle")
-    .text((d) => `${d.violations}`);
+        const groupAddressWeekWiseSummary = {};
+        const groupAddressWeekResultSet = [];
 
-  svg
-    .append("text")
-    .attr("class", "label")
-    .attr("x", -(ym_bar_height - ym_bar_margin.bottom - ym_bar_margin.top) / 2)
-    .attr("y", ym_bar_margin.bottom + ym_bar_margin.top / 100)
-    .attr("transform", "rotate(-90)")
-    .attr("text-anchor", "middle")
-    .text("Violations");
+        for (let record of speedViolationData) {
+          const year = record.year;
+          const month = record.month;
+          const weekday = record.weekday;
+          const address = record.address;
+          const splitAddr = address.split(" ");
+          const len = splitAddr.length;
+          var street = "";
 
-  // svg.append('text')
-  //   .attr('class', 'label')
-  //   .attr('x', -((width - ym_bar_margin.right - ym_bar_margin.left) / 20))
-  //   .attr('y', ym_bar_margin.bottom)
-  //   .attr('text-anchor', 'middle')
-  //   .text('Months')
-  ym_BarChart = svg.node();
+          // const weekday_month_year = weekday.toString().concat(" ").concat(month).concat(" ").concat(year);
+          const address_weekday = address.concat(" ").concat(weekday);
 
-  document.querySelector(".ques3").appendChild(ym_BarChart);
+          if (len === 3) {
+            street = splitAddr[2];
+          } else if (len >= 5) {
+            street = splitAddr[2]
+              .concat(" ")
+              .concat(splitAddr[3])
+              .concat(" ")
+              .concat(splitAddr[4]);
+          } else {
+            street = splitAddr[2].concat(" ").concat(splitAddr[3]);
+          }
 
-  width = window.innerWidth / 2;
+          if (!(year in yearWiseSummary)) {
+            yearWiseSummary[year] = { violations: 0 };
+          }
 
-  wmy_scatter_margin = { top: 10, right: 20, bottom: 50, left: 105 };
+          yearWiseSummary[year]["violations"] += record.violations;
 
-  wmy_scatter_visWidth = 400;
+          if (!(month in monthWiseSummary)) {
+            monthWiseSummary[month] = { violations: 0 };
+          }
 
-  wmy_scatter_visHeight = 400;
+          monthWiseSummary[month]["violations"] += record.violations;
 
-  wmy_scatter_origins = Array.from(
-    new Set(summaryData.groupAddressWeekWiseData.map((d) => d.weekday))
-  );
+          if (!(weekday in weekdayWiseSummary)) {
+            weekdayWiseSummary[weekday] = { violations: 0 };
+          }
 
-  wmy_scatter_weekColor = d3
-    .scaleOrdinal()
-    .domain(wmy_scatter_origins)
-    .range(d3.schemeCategory10);
+          weekdayWiseSummary[weekday]["violations"] += record.violations;
 
-  wmy_scatter_xScale = d3
-    .scaleLinear()
-    .domain(
-      d3.extent(summaryData.groupAddressWeekWiseData, (d) => d.x_coordinate)
-    )
-    .nice()
-    .range([0, wmy_scatter_visWidth]);
+          if (!(address in addressWiseSummary)) {
+            addressWiseSummary[address] = {
+              violations: 0,
+              x_coordinate: record.x_coordinate,
+              y_coordinate: record.y_coordinate,
+            };
+          }
 
-  wmy_scatter_yScale = d3
-    .scaleLinear()
-    .domain(
-      d3.extent(summaryData.groupAddressWeekWiseData, (d) => d.y_coordinate)
-    )
-    .nice()
-    .range([wmy_scatter_visHeight, 0]);
+          addressWiseSummary[address]["violations"] += record.violations;
 
-  wmy_scatter_xAxis = (g, scale, label) =>
-    g
-      .attr("transform", `translate(0, ${wmy_scatter_visHeight})`)
-      .call(d3.axisBottom(scale))
-      .call((g) => g.select(".domain").remove())
-      .call((g) =>
-        g
-          .selectAll(".tick line")
-          .clone()
-          .attr("stroke", "#d3d3d3")
-          .attr("y1", -wmy_scatter_visHeight)
-          .attr("y2", 0)
-      )
-      .append("text")
-      .attr("x", wmy_scatter_visWidth / 2)
-      .attr("y", 40)
-      .attr("fill", "black")
-      .attr("text-anchor", "middle")
-      .text(label);
+          if (!(street in streetWiseSummary)) {
+            streetWiseSummary[street] = {
+              violations: 0,
+              x_coordinate: record.x_coordinate,
+              y_coordinate: record.y_coordinate,
+              latitude: record.latitude,
+              longitude: record.longitude,
+            };
+          }
 
-  wmy_scatter_yAxis = (g, scale, label) =>
-    g
-      .call(d3.axisLeft(scale))
-      .call((g) => g.select(".domain").remove())
-      .call((g) =>
-        g
-          .selectAll(".tick line")
-          .clone()
-          .attr("stroke", "#d3d3d3")
-          .attr("x1", 0)
-          .attr("x2", wmy_scatter_visWidth)
-      )
-      .append("text")
-      .attr("x", -40)
-      .attr("y", wmy_scatter_visHeight / 2)
-      .attr("fill", "black")
-      .attr("dominant-baseline", "middle")
-      .text(label);
+          streetWiseSummary[street]["violations"] += record.violations;
 
-  function wmy_brushableScatterplot() {
-    const value = summaryData.groupAddressWeekWiseData;
-    const svg = d3
-      .create("svg")
-      .attr(
-        "width",
-        wmy_scatter_visWidth +
-          wmy_scatter_margin.left +
-          wmy_scatter_margin.right
-      )
-      .attr(
-        "height",
-        wmy_scatter_visHeight +
-          wmy_scatter_margin.top +
-          wmy_scatter_margin.bottom
-      )
-      .property("value", value);
+          if (!(address_weekday in groupAddressWeekWiseSummary)) {
+            groupAddressWeekWiseSummary[address_weekday] = {
+              violations: 0,
+              address: address,
+              weekday: getWeekName(weekday),
+              x_coordinate: record.x_coordinate,
+              y_coordinate: record.y_coordinate,
+              latitude: record.latitude,
+              longitude: record.longitude,
+            };
+          }
 
-    const g = svg
-      .append("g")
-      .attr(
-        "transform",
-        `translate(${wmy_scatter_margin.left}, ${wmy_scatter_margin.top})`
-      );
+          groupAddressWeekWiseSummary[address_weekday]["violations"] +=
+            record.violations;
+        }
 
-    g.append("g").call(wmy_scatter_xAxis, wmy_scatter_xScale, "X Coordinate");
-    g.append("g").call(wmy_scatter_yAxis, wmy_scatter_yScale, "Y Coordinate");
+        for (let year in yearWiseSummary) {
+          const tempObj = {
+            year: year,
+            violations: yearWiseSummary[year]["violations"],
+          };
 
-    const dots = g
-      .selectAll("circle")
-      .data(summaryData.groupAddressWeekWiseData.filter((d) => d.weekday))
-      .join("circle")
-      .attr("cx", (d) => wmy_scatter_xScale(d.x_coordinate))
-      .attr("cy", (d) => wmy_scatter_yScale(d.y_coordinate))
-      .attr("r", 8)
-      .attr("fill", (d) => wmy_scatter_weekColor(d.weekday))
-      .attr("opacity", 0.3);
+          yearResultSet.push(tempObj);
+        }
 
-    //   data_1 = summaryData.groupAddressWeekWiseData.filter((d) => d.weekday)
-    //   console.log("data_1:", data_1)
-    
-    // for(let i = 0; i < data_1.length; i++){
-    //   console.log("wmy_scatter_xScale(d.x_coordinate)", wmy_scatter_xScale(data_1[i].x_coordinate))
-    // }
+        for (let month in monthWiseSummary) {
+          const tempObj = {
+            month: getMonthName(month),
+            violations: monthWiseSummary[month]["violations"],
+          };
 
-    const brush = d3
-      .brush()
-      .extent([
-        [0, 0],
-        [wmy_scatter_visWidth, wmy_scatter_visHeight],
-      ])
-      .on("brush", onBrush)
-      .on("end", onEnd);
+          monthResultSet.push(tempObj);
+        }
 
-    g.append("g").call(brush);
+        for (let weekday in weekdayWiseSummary) {
+          const tempObj = {
+            weekday: getWeekName(weekday),
+            violations: weekdayWiseSummary[weekday]["violations"],
+          };
 
-    function onBrush(event) {
-      const [[x1, y1], [x2, y2]] = event.selection;
+          weekdayResultSet.push(tempObj);
+        }
 
-      function isBrushed(d) {
-        const cx = wmy_scatter_xScale(d.x_coordinate);
-        const cy = wmy_scatter_yScale(d.y_coordinate);
-        return cx >= x1 && cx <= x2 && cy >= y1 && cy <= y2;
-      }
+        for (let address in addressWiseSummary) {
+          const tempObj = {
+            address: address,
+            violations: addressWiseSummary[address]["violations"],
+            x_coordinate: addressWiseSummary[address]["x_coordinate"],
+            y_coordinate: addressWiseSummary[address]["y_coordinate"],
+          };
 
-      dots.attr("fill", (d) =>
-        isBrushed(d) ? wmy_scatter_weekColor(d.weekday) : "gray"
-      );
+          addressResultSet.push(tempObj);
+        }
 
-      svg
-        .property(
-          "value",
-          summaryData.groupAddressWeekWiseData.filter(isBrushed)
-        )
-        .dispatch("input");
-    }
+        for (let street in streetWiseSummary) {
+          const tempObj = {
+            street: street,
+            violations: streetWiseSummary[street]["violations"],
+            x_coordinate: streetWiseSummary[street]["x_coordinate"] / 10000,
+            y_coordinate: streetWiseSummary[street]["y_coordinate"] / 10000,
+            latitude: streetWiseSummary[street]["latitude"],
+            longitude: streetWiseSummary[street]["longitude"],
+          };
 
-    function onEnd(event) {
-      if (event.selection == null) {
-        dots.attr("fill", (d) => wmy_scatter_weekColor(d.weekday));
-        svg.property("value", value).dispatch("input");
-      }
-    }
+          streetResultSet.push(tempObj);
+        }
 
-    return svg.node();
-  }
+        for (let address_weekday in groupAddressWeekWiseSummary) {
+          // const split = address_weekday.split(" ");
+          const tempObj = {
+            address: groupAddressWeekWiseSummary[address_weekday]["address"],
+            weekday: groupAddressWeekWiseSummary[address_weekday]["weekday"],
+            violations: groupAddressWeekWiseSummary[address_weekday]["violations"],
+            x_coordinate:
+              groupAddressWeekWiseSummary[address_weekday]["x_coordinate"] / 10000,
+            y_coordinate:
+              groupAddressWeekWiseSummary[address_weekday]["y_coordinate"] / 10000,
+            latitude: groupAddressWeekWiseSummary[address_weekday]["latitude"],
+            longitude: groupAddressWeekWiseSummary[address_weekday]["longitude"],
+          };
+          groupAddressWeekResultSet.push(tempObj);
+        }
 
-  function wmy_barChart() {
-    const wmy_bar_margin = { top: 10, right: 20, bottom: 50, left: 70 };
-    const wmy_bar_visWidth = 400;
-    const wmy_bar_visHeight = 400;
+        var prevYear = 0;
+        var currYear = 0;
+        var prevYear_violations = 0;
+        const changeResultSet = [];
 
-    const svg = d3
-      .create("svg")
-      .attr(
-        "width",
-        wmy_bar_visWidth + wmy_bar_margin.left + wmy_bar_margin.right
-      )
-      .attr(
-        "height",
-        wmy_bar_visHeight + wmy_bar_margin.top + wmy_bar_margin.bottom
-      );
+        for (let record of yearResultSet) {
+          if (prevYear !== 0) {
+            currYear = record.year;
+            const currObj = {
+              prevYear: prevYear,
+              currYear: currYear,
+              prevYear_violations: prevYear_violations,
+              currYear_violations: record.violations,
+            };
+            changeResultSet.push(currObj);
+            prevYear = currYear;
+            prevYear_violations = record.violations;
+          } else {
+            prevYear = record.year;
+            prevYear_violations = record.violations;
+          }
+        }
 
-    const g = svg
-      .append("g")
-      .attr(
-        "transform",
-        `translate(${wmy_bar_margin.left}, ${wmy_bar_margin.top})`
-      );
+        const summaryData = {
+          yearWiseData: yearResultSet,
+          monthWiseData: monthResultSet,
+          weekdayWiseData: weekdayResultSet,
+          addressWiseData: addressResultSet,
+          streetWiseData: streetResultSet,
+          changeYearWiseData: changeResultSet,
+          groupAddressWeekWiseData: groupAddressWeekResultSet.sort(
+            (a, b) => parseFloat(a.year) - parseFloat(b.year)
+          ),
+        };
 
-    const wmy_bar_yScale = d3
-      .scaleLinear()
-      .range([wmy_bar_margin.top, wmy_bar_visHeight]);
+        ym_bar_margin = { top: 50, right: 0, bottom: 30, left: 80 };
 
-    const wmy_bar_xScale = d3
-      .scaleBand()
-      .domain(wmy_scatter_weekColor.domain())
-      .range([0, wmy_bar_visWidth])
-      .padding(0.2);
+        ym_bar_height = 600;
+        width = window.innerWidth;
 
-    const xAxis = d3.axisBottom(wmy_bar_xScale).tickSizeOuter(0);
+        ym_bar_xScale = d3
+          .scaleBand()
+          .domain(summaryData.monthWiseData.map((d) => d.month))
+          .range([ym_bar_margin.left, width - ym_bar_margin.right])
+          .padding(0.1);
 
-    const xAxisGroup = g
-      .append("g")
-      .attr("transform", `translate(0, ${wmy_bar_visWidth})`);
-    const yAxis = d3.axisLeft(wmy_bar_yScale);
+        ym_bar_yScale = d3
+          .scaleLinear()
+          .domain([0, d3.max(summaryData.monthWiseData, (d) => d.violations)])
+          .nice()
+          .range([ym_bar_height - ym_bar_margin.bottom, ym_bar_margin.top]);
 
-    const yAxisGroup = g.append("g").call(yAxis);
+        const svg = d3.create("svg").attr("viewBox", [0, 0, width, ym_bar_height]);
 
-    const yAxis_2 = d3.axisLeft(wmy_bar_yScale);
+        const makeYLines = () => d3.axisLeft().scale(ym_bar_yScale);
 
-    const yAxisGroup_2 = g.append("g").call(yAxis_2);
+        svg
+          .append("g")
+          .attr("transform", `translate(0 , ${ym_bar_height - ym_bar_margin.bottom})`)
+          .call(d3.axisBottom(ym_bar_xScale).tickSizeOuter(4));
 
-    yAxisGroup
-      .append("text")
-      .attr(
-        "x",
-        -(wmy_bar_visWidth - wmy_bar_margin.bottom - wmy_bar_margin.top) / 2
-      )
-      .attr("y", wmy_bar_margin.bottom + wmy_bar_margin.top - 120)
-      .attr("fill", "black")
-      .attr("text-anchor", "middle")
-      .attr("transform", "rotate(-90)")
-      .style("font-size", "10px")
-      .text("Violations");
+        svg
+          .append("g")
+          .attr("transform", `translate(${ym_bar_margin.left}, 0)`)
+          .call(d3.axisLeft(ym_bar_yScale));
 
-    let barsGroup = g.append("g");
+        svg
+          .append("g")
+          .attr("class", "grid")
+          .attr("transform", `translate(${ym_bar_margin.left}, 0)`)
+          .call(
+            makeYLines()
+              .tickSize(-width - ym_bar_margin.right - ym_bar_margin.left, 0, 0)
+              .tickFormat("")
+          );
 
-    function update(data) {
-      const weekdayCounts = d3.rollup(
-        data,
-        (group) => d3.sum(group, (d) => d.violations),
-        (d) => d.weekday
-      );
+        const barGroups = svg
+          .selectAll()
+          .data(summaryData.monthWiseData)
+          .enter()
+          .append("g");
 
-      wmy_bar_yScale.domain([d3.max(weekdayCounts.values()), 0]).nice();
+        barGroups
+          .append("rect")
+          .attr("class", "bar")
+          .attr("x", (d) => ym_bar_xScale(d.month) + 20)
+          .attr("y", (d) => ym_bar_yScale(d.violations))
+          .attr("fill", "LightSeaGreen")
+          .attr(
+            "height",
+            (d) => ym_bar_height - ym_bar_margin.bottom - ym_bar_yScale(d.violations)
+          )
+          .attr("width", ym_bar_xScale.bandwidth() - 40)
+          .on("mouseenter", function (actual, i) {
+            d3.selectAll(".value").attr("opacity", 0);
 
-      const makeYLines = () => d3.axisLeft().scale(wmy_bar_yScale);
+            d3.select(this)
+              .transition()
+              .duration(300)
+              .attr("opacity", 0.6)
+              .attr("x", (d) => ym_bar_xScale(d.month) + 10)
+              .attr("width", ym_bar_xScale.bandwidth() - 20);
 
-      const t = svg.transition().ease(d3.easeLinear).duration(100);
-      const t_2 = svg.transition().ease(d3.easeLinear).duration(100);
+            const y = ym_bar_yScale(i.violations);
 
-      yAxisGroup.transition(t).call(yAxis);
-      yAxisGroup_2
-        .transition(t_2)
-        .attr("transform", `translate(0, 0)`)
-        .call(
-          makeYLines()
-            .tickSize(-width - wmy_bar_margin.right - wmy_bar_margin.left, 0, 0)
-            .tickFormat("")
+            const line = svg
+              .append("line")
+              .attr("id", "limit")
+              .attr("stroke", "HotPink")
+              .style("stroke-dasharray", "5 5")
+              .style("stroke-width", "2px")
+              .attr("x1", ym_bar_margin.left)
+              .attr("y1", y)
+              .attr("x2", (width - ym_bar_margin.right) * 2)
+              .attr("y2", y);
+
+            barGroups
+              .append("text")
+              .attr("class", "divergence")
+              .attr(
+                "x",
+                (d) => ym_bar_xScale(d.month) + ym_bar_xScale.bandwidth() / 2
+              )
+              .attr("y", (d) => ym_bar_yScale(d.violations) - 5)
+              .style("font-size", "15px")
+              .attr("fill", "HotPink")
+              .style("font-weight", "bold")
+              .attr("text-anchor", "middle")
+              .text((a, idx) => {
+                const diff_violations = a.violations - i.violations;
+                const divergence = ((diff_violations / i.violations) * 100).toFixed(
+                  2
+                );
+
+                let text = "";
+                if (divergence > 0) text += "+";
+                text += `${divergence}%`;
+
+                // i - object - current selection - violations and month
+                // a - not cureent bars - violations and month
+                // idx -  index
+                // actual - object, MouseEvent
+
+                return i.month !== a.month ? text : "";
+              });
+          })
+          .on("mouseleave", function () {
+            d3.selectAll(".value").attr("opacity", 1);
+
+            d3.select(this)
+              .transition()
+              .duration(300)
+              .attr("opacity", 1)
+              .attr("x", (d) => ym_bar_xScale(d.month) + 20)
+              .attr("width", ym_bar_xScale.bandwidth() - 40);
+
+            svg.selectAll("#limit").remove();
+            svg.selectAll(".divergence").remove();
+          });
+
+        barGroups
+          .append("text")
+          .attr("class", "value")
+          .attr("x", (d) => ym_bar_xScale(d.month) + ym_bar_xScale.bandwidth() / 2)
+          .attr("y", (d) => ym_bar_yScale(d.violations) - 5)
+          .style("font-size", "15px")
+          .style("font-weight", "bold")
+          .attr("text-anchor", "middle")
+          .text((d) => `${d.violations}`);
+
+        svg
+          .append("text")
+          .attr("class", "label")
+          .attr("x", -(ym_bar_height - ym_bar_margin.bottom - ym_bar_margin.top) / 2)
+          .attr("y", ym_bar_margin.bottom + ym_bar_margin.top / 100)
+          .attr("transform", "rotate(-90)")
+          .attr("text-anchor", "middle")
+          .text("Violations");
+
+        // svg.append('text')
+        //   .attr('class', 'label')
+        //   .attr('x', -((width - ym_bar_margin.right - ym_bar_margin.left) / 20))
+        //   .attr('y', ym_bar_margin.bottom)
+        //   .attr('text-anchor', 'middle')
+        //   .text('Months')
+        ym_BarChart = svg.node();
+
+        document.querySelector(".ques3").appendChild(ym_BarChart);
+
+        width = window.innerWidth / 2;
+
+        wmy_scatter_margin = { top: 10, right: 20, bottom: 50, left: 105 };
+
+        wmy_scatter_visWidth = 400;
+
+        wmy_scatter_visHeight = 400;
+
+        wmy_scatter_origins = Array.from(
+          new Set(summaryData.groupAddressWeekWiseData.map((d) => d.weekday))
         );
-      xAxisGroup.transition(t).call(xAxis);
 
-      barsGroup
-        .selectAll("rect")
-        .data(weekdayCounts, ([weekday, count]) => weekday)
-        .join("rect")
-        .attr("fill", ([weekday, count]) => wmy_scatter_weekColor(weekday))
-        .attr(
-          "height",
-          ([weekday, count]) => wmy_bar_visHeight - wmy_bar_yScale(count)
-        )
-        .attr("x", ([weekday, count]) => wmy_bar_xScale(weekday))
-        .attr("y", ([weekday, count]) => wmy_bar_yScale(count))
-        .transition(t)
-        .attr("width", wmy_bar_xScale.bandwidth());
-    }
+        wmy_scatter_weekColor = d3
+          .scaleOrdinal()
+          .domain(wmy_scatter_origins)
+          .range(d3.schemeCategory10);
 
-    return Object.assign(svg.node(), { update });
-  }
+        wmy_scatter_xScale = d3
+          .scaleLinear()
+          .domain(
+            d3.extent(summaryData.groupAddressWeekWiseData, (d) => d.x_coordinate)
+          )
+          .nice()
+          .range([0, wmy_scatter_visWidth]);
 
-  const scatter = wmy_brushableScatterplot();
-  const bar = wmy_barChart();
+        wmy_scatter_yScale = d3
+          .scaleLinear()
+          .domain(
+            d3.extent(summaryData.groupAddressWeekWiseData, (d) => d.y_coordinate)
+          )
+          .nice()
+          .range([wmy_scatter_visHeight, 0]);
 
-  d3.select(scatter).on("input", () => {
-    bar.update(scatter.value);
+        wmy_scatter_xAxis = (g, scale, label) =>
+          g
+            .attr("transform", `translate(0, ${wmy_scatter_visHeight})`)
+            .call(d3.axisBottom(scale))
+            .call((g) => g.select(".domain").remove())
+            .call((g) =>
+              g
+                .selectAll(".tick line")
+                .clone()
+                .attr("stroke", "#d3d3d3")
+                .attr("y1", -wmy_scatter_visHeight)
+                .attr("y2", 0)
+            )
+            .append("text")
+            .attr("x", wmy_scatter_visWidth / 2)
+            .attr("y", 40)
+            .attr("fill", "black")
+            .attr("text-anchor", "middle")
+            .text(label);
+
+        wmy_scatter_yAxis = (g, scale, label) =>
+          g
+            .call(d3.axisLeft(scale))
+            .call((g) => g.select(".domain").remove())
+            .call((g) =>
+              g
+                .selectAll(".tick line")
+                .clone()
+                .attr("stroke", "#d3d3d3")
+                .attr("x1", 0)
+                .attr("x2", wmy_scatter_visWidth)
+            )
+            .append("text")
+            .attr("x", -40)
+            .attr("y", wmy_scatter_visHeight / 2)
+            .attr("fill", "black")
+            .attr("dominant-baseline", "middle")
+            .text(label);
+
+        function wmy_brushableScatterplot() {
+          const value = summaryData.groupAddressWeekWiseData;
+          const svg = d3
+            .create("svg")
+            .attr(
+              "width",
+              wmy_scatter_visWidth +
+                wmy_scatter_margin.left +
+                wmy_scatter_margin.right
+            )
+            .attr(
+              "height",
+              wmy_scatter_visHeight +
+                wmy_scatter_margin.top +
+                wmy_scatter_margin.bottom
+            )
+            .property("value", value);
+
+          const g = svg
+            .append("g")
+            .attr(
+              "transform",
+              `translate(${wmy_scatter_margin.left}, ${wmy_scatter_margin.top})`
+            );
+
+          g.append("g").call(wmy_scatter_xAxis, wmy_scatter_xScale, "X Coordinate");
+          g.append("g").call(wmy_scatter_yAxis, wmy_scatter_yScale, "Y Coordinate");
+
+          const dots = g
+            .selectAll("circle")
+            .data(summaryData.groupAddressWeekWiseData.filter((d) => d.weekday))
+            .join("circle")
+            .attr("cx", (d) => wmy_scatter_xScale(d.x_coordinate))
+            .attr("cy", (d) => wmy_scatter_yScale(d.y_coordinate))
+            .attr("r", 8)
+            .attr("fill", (d) => wmy_scatter_weekColor(d.weekday))
+            .attr("opacity", 0.3);
+
+          //   data_1 = summaryData.groupAddressWeekWiseData.filter((d) => d.weekday)
+          //   console.log("data_1:", data_1)
+          
+          // for(let i = 0; i < data_1.length; i++){
+          //   console.log("wmy_scatter_xScale(d.x_coordinate)", wmy_scatter_xScale(data_1[i].x_coordinate))
+          // }
+
+          const brush = d3
+            .brush()
+            .extent([
+              [0, 0],
+              [wmy_scatter_visWidth, wmy_scatter_visHeight],
+            ])
+            .on("brush", onBrush)
+            .on("end", onEnd);
+
+          g.append("g").call(brush);
+
+          function onBrush(event) {
+            const [[x1, y1], [x2, y2]] = event.selection;
+
+            function isBrushed(d) {
+              const cx = wmy_scatter_xScale(d.x_coordinate);
+              const cy = wmy_scatter_yScale(d.y_coordinate);
+              return cx >= x1 && cx <= x2 && cy >= y1 && cy <= y2;
+            }
+
+            dots.attr("fill", (d) =>
+              isBrushed(d) ? wmy_scatter_weekColor(d.weekday) : "gray"
+            );
+
+            svg
+              .property(
+                "value",
+                summaryData.groupAddressWeekWiseData.filter(isBrushed)
+              )
+              .dispatch("input");
+          }
+
+          function onEnd(event) {
+            if (event.selection == null) {
+              dots.attr("fill", (d) => wmy_scatter_weekColor(d.weekday));
+              svg.property("value", value).dispatch("input");
+            }
+          }
+
+          return svg.node();
+        }
+
+        function wmy_barChart() {
+          const wmy_bar_margin = { top: 10, right: 20, bottom: 50, left: 70 };
+          const wmy_bar_visWidth = 400;
+          const wmy_bar_visHeight = 400;
+
+          const svg = d3
+            .create("svg")
+            .attr(
+              "width",
+              wmy_bar_visWidth + wmy_bar_margin.left + wmy_bar_margin.right
+            )
+            .attr(
+              "height",
+              wmy_bar_visHeight + wmy_bar_margin.top + wmy_bar_margin.bottom
+            );
+
+          const g = svg
+            .append("g")
+            .attr(
+              "transform",
+              `translate(${wmy_bar_margin.left}, ${wmy_bar_margin.top})`
+            );
+
+          const wmy_bar_yScale = d3
+            .scaleLinear()
+            .range([wmy_bar_margin.top, wmy_bar_visHeight]);
+
+          const wmy_bar_xScale = d3
+            .scaleBand()
+            .domain(wmy_scatter_weekColor.domain())
+            .range([0, wmy_bar_visWidth])
+            .padding(0.2);
+
+          const xAxis = d3.axisBottom(wmy_bar_xScale).tickSizeOuter(0);
+
+          const xAxisGroup = g
+            .append("g")
+            .attr("transform", `translate(0, ${wmy_bar_visWidth})`);
+          const yAxis = d3.axisLeft(wmy_bar_yScale);
+
+          const yAxisGroup = g.append("g").call(yAxis);
+
+          const yAxis_2 = d3.axisLeft(wmy_bar_yScale);
+
+          const yAxisGroup_2 = g.append("g").call(yAxis_2);
+
+          yAxisGroup
+            .append("text")
+            .attr(
+              "x",
+              -(wmy_bar_visWidth - wmy_bar_margin.bottom - wmy_bar_margin.top) / 2
+            )
+            .attr("y", wmy_bar_margin.bottom + wmy_bar_margin.top - 120)
+            .attr("fill", "black")
+            .attr("text-anchor", "middle")
+            .attr("transform", "rotate(-90)")
+            .style("font-size", "10px")
+            .text("Violations");
+
+          let barsGroup = g.append("g");
+
+          function update(data) {
+            const weekdayCounts = d3.rollup(
+              data,
+              (group) => d3.sum(group, (d) => d.violations),
+              (d) => d.weekday
+            );
+
+            wmy_bar_yScale.domain([d3.max(weekdayCounts.values()), 0]).nice();
+
+            const makeYLines = () => d3.axisLeft().scale(wmy_bar_yScale);
+
+            const t = svg.transition().ease(d3.easeLinear).duration(100);
+            const t_2 = svg.transition().ease(d3.easeLinear).duration(100);
+
+            yAxisGroup.transition(t).call(yAxis);
+            yAxisGroup_2
+              .transition(t_2)
+              .attr("transform", `translate(0, 0)`)
+              .call(
+                makeYLines()
+                  .tickSize(-width - wmy_bar_margin.right - wmy_bar_margin.left, 0, 0)
+                  .tickFormat("")
+              );
+            xAxisGroup.transition(t).call(xAxis);
+
+            barsGroup
+              .selectAll("rect")
+              .data(weekdayCounts, ([weekday, count]) => weekday)
+              .join("rect")
+              .attr("fill", ([weekday, count]) => wmy_scatter_weekColor(weekday))
+              .attr(
+                "height",
+                ([weekday, count]) => wmy_bar_visHeight - wmy_bar_yScale(count)
+              )
+              .attr("x", ([weekday, count]) => wmy_bar_xScale(weekday))
+              .attr("y", ([weekday, count]) => wmy_bar_yScale(count))
+              .transition(t)
+              .attr("width", wmy_bar_xScale.bandwidth());
+          }
+
+          return Object.assign(svg.node(), { update });
+        }
+
+        const scatter = wmy_brushableScatterplot();
+        const bar = wmy_barChart();
+
+        d3.select(scatter).on("input", () => {
+          bar.update(scatter.value);
+        });
+
+        bar.update(scatter.value);
+
+        document.querySelector(".linkedview > .scatter").appendChild(scatter);
+        document.querySelector(".linkedview > .plot").appendChild(bar);
+
+
+      };
+
+      main();
   });
-
-  bar.update(scatter.value);
-
-  document.querySelector(".linkedview > .scatter").appendChild(scatter);
-  document.querySelector(".linkedview > .plot").appendChild(bar);
-
-
-};
-
-main();
+});
 
 
 
